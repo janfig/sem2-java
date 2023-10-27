@@ -3,17 +3,13 @@ package com.example.lab1;
 import java.io.*;
 import java.util.ArrayList;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
 
 @WebServlet(name = "calcServlet", value = "/calc-servlet")
 public class CalcServlet extends HttpServlet {
-    private String message;
 
-    public void init() {
-        message = "Hello World!";
-    }
+    public void init() {}
 
     public void processRequest(HttpServletRequest req, HttpServletResponse res) throws IOException {
         res.setContentType("text/html");
@@ -22,8 +18,7 @@ public class CalcServlet extends HttpServlet {
         int visitCount = 1;
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
-            for (int i = 0; i < cookies.length; i++) {
-                Cookie c = cookies[i];
+            for (Cookie c : cookies) {
                 if (nazwaCookie.equals(c.getName())) {
                     visitCount = Integer.parseInt(c.getValue());
                     visitCount++;
@@ -42,7 +37,7 @@ public class CalcServlet extends HttpServlet {
         HttpSession session = req.getSession(true);
         ArrayList<String> operationHist = (ArrayList<String>) session.getAttribute("opHis");
         if (operationHist == null || (req.getParameter("clearSession") != null && req.getParameter("clearSession").equals("true"))) { //nie ma szukanego obiektu w sesji
-            operationHist = new ArrayList<String>();
+            operationHist = new ArrayList<>();
         }
 
 
@@ -75,41 +70,45 @@ public class CalcServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         processRequest(req, res);
     }
 
     public String calculate(String num1, String num2, String operation) {
-        String errorMess = null;
-        if ((num1 == null) || (num2.trim().equals(""))) {
+        if ((num1 == null) || (num1.trim().isEmpty())) {
             return "Num1 should be, a valid number";
         }
-        if ((num2 == null) || (num2.trim().equals(""))) {
-            return "Num1 should be, a valid number";
+        if ((num2 == null) || (num2.trim().isEmpty())) {
+            return "Num2 should be, a valid number";
         }
         float a = Float.parseFloat(num1);
         float b = Float.parseFloat(num2);
 
+        String operationSymbol = "";
         float result = 0;
         switch (operation) {
-            case "+":
+            case "add":
                 result = a + b;
+                operationSymbol  = "+";
                 break;
-            case "-":
+            case "sub":
                 result = a - b;
+                operationSymbol  = "-";
                 break;
-            case "*":
+            case "mul":
                 result = a * b;
+                operationSymbol  = "*";
                 break;
-            case "/":
+            case "div":
                 if (b == 0) {
                     return "Cannot divide by 0";
                 }
                 result = a / b;
+                operationSymbol  = "/";
                 break;
         }
 
-        return num1 + " " + operation + " " + num2 + "=" + result;
+        return num1 + " " + operationSymbol + " " + num2 + "=" + result;
     }
 
     public void destroy() {
