@@ -25,11 +25,9 @@ public class PracownikDao {
     }
 
     public int update(Pracownik p) {
-        String sql = "update pracownik set "
-                + "nazwisko = " + p.getNazwisko()
-                + " pensja = " + p.getPensja()
-                + " firma = " + p.getFirma()
-                + " where 1";
+        String sql = String.format("update pracownik set " +
+                        "nazwisko ='%s', pensja = %f, firma = '%s' where id = %d",
+                p.getNazwisko(), p.getPensja(), p.getFirma(), p.getId());
         return template.update(sql);
     }
 

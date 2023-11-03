@@ -45,8 +45,15 @@ public class PracownikController {
     public String edit(@PathVariable int id, Model m) {
         Pracownik p = dao.getPracownikById(id);
         //przekierowanie do endpointa o URL: /viewAll
-        m.addAttribute("command", new Pracownik());
+        m.addAttribute("command", p);
         return "editForm"; //przekiekrowanie do addForm.jsp
+    }
+
+    @RequestMapping(value = "/editsave", method = RequestMethod.POST)
+    public String editsave(@ModelAttribute("pr") Pracownik pr) {
+        dao.update(pr);
+        //przekierowanie do endpointa o URL: /viewAll
+        return "redirect:/viewAll";
     }
 
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
