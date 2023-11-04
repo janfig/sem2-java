@@ -22,7 +22,7 @@ public class UserAuthenticationDetails implements UserDetailsService {
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
         User user = dao.findByLogin(login);
 
-        if (user != null) throw new UsernameNotFoundException("Zły login lub hasło.");
+        if (user == null) throw new UsernameNotFoundException("Zły login lub hasło.");
 
         List<GrantedAuthority> group = new ArrayList<>();
         group.add(new SimpleGrantedAuthority("normalUser"));
