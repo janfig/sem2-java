@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-// http://localhost:8080/country/continent/Asia
-// http://localhost:8080/country/population/min/10000/max/1000000
-// http://localhost:8080/country/continent/Europe/area/min/10000/max/100000
+// http://localhost:8081/country/continent/Asia
+// http://localhost:8081/country/population/min/100/max/1000
+// http://localhost:8081/country/continent/Europe/area/min/10000/max/100000
 @Controller
 @AllArgsConstructor
 @RequestMapping("country")

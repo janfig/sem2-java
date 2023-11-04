@@ -1,20 +1,24 @@
 package com.example.lab5.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
+@Table(name = "country")
 @Data
 public class Country {
-    @GeneratedValue
+    @Column(columnDefinition = "char")
     @Id
-    private Long id;
-
-    String name;
     String code;
+
+    @Column(columnDefinition = "char")
+    String name;
+
     Integer population;
+
+    @Column(columnDefinition = "decimal")
     Integer surfaceArea;
+
+    @Column(columnDefinition = "enum('Asia', 'Europe', 'North America', 'Africa', 'Oceania', 'Antarctica', 'South America')")
     String continent;
 }
