@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <title>Student Management</title>
+    <meta charset="utf-8"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script>
+        let studentTableBody;
+
+        function handleErrors(id, response) {
+            const errorDiv = document.getElementById(id);
+            errorDiv.innerHTML = "";
+            if (response.status === 404) {
+                errorDiv.innerHTML += '<p class="alert alert-danger" style="display: block;">Nie znaleziono studenta z danym id</p>';
+            } else {
+                response.json().then(x => x['errors'].forEach(err => {
+                    const p = `<p class="alert alert-danger" style="display: block;">${err}</p>`;
+                    errorDiv.innerHTML += p;
+                }));
+            }
+        }
+
+        function readDataIntoTable(data) {
+            studentTableBody.innerHTML = "";
+            data.forEach(student => {
+                const newRow = studentTableBody.insertRow(-1);
+                newRow.id = `student_${student.id}`
+                newRow.innerHTML = `
+                                            <td id="id">${student.id}</td>
+                                            <td id="name">${student.name}</td>
+                                            <td id="surname ">${student.surname}</td>
+                                            <td id="average">${student.average}</td>
+                                            <td><button onclick="showUpdatePopup(${student.id})" class="btn btn-info">Update</button>
+                                            <button onclick="showDeletePopup(${student.id})" class="btn btn-danger">Delete</button>
+                                            </td>
+`;
+            });
+        }
+
+        function loadData() {
+            studentTableBody.innerHTML = "";
+            fetch('/students')
+                .then(response => response.json())
+                .then(data => {
+                    readDataIntoTable(data)
+                })
+                .catch(error => console.error(error));
+        }
+
+        function showAddPopUp() {
+            document.getElementById("name").value = "";
+            document.getElementById("surname").value = "";
+            document.getElementById("average").value = "";
+            $('#addStudentModal').modal('show');
+        }
+
+        function addStudent() {
+            const name = document.getElementById("name").value;
+            const surname = document.getElementById("surname").value;
+            const average = document.getElementById("average").value;
+
+            const studentData = {
+                name: name,
+                surname: surname,
+                average: parseFloat(average)
+            };
+
+            fetch('/students', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(studentData)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        loadData();
+                        $('#addStudentModal').modal('hide');
+                    } else {
+                        handleErrors("addStudentErrors", response);
+                    }
+                })
+                .catch(error => console.error(error));
+        }
+
+        function showUpdatePopup(id) {
+            const row = studentTableBody.querySelectorAll(`tr#student_${id} td`);
+            const name = row[1].innerHTML;
+            const surname = row[2].innerHTML;
+            const average = row[3].innerHTML;
+            document.getElementById("updateName").value = name;
+            document.getElementById("updateSurname").value = surname;
+            document.getElementById("updateAverage").value = average;
+            document.getElementById("updateStudentId").value = id;
+
+            $('#updateStudentModal').modal('show');
+        }
+
+        function updateStudent() {
+            const studentId = document.getElementById("updateStudentId").value;
+            const name = document.getElementById("updateName").value;
+            const surname = document.getElementById("updateSurname").value;
+            const average = document.getElementById("updateAverage").value;
+
+            const studentData = {
+                id: studentId,
+                name: name,
+                surname: surname,
+                average: parseFloat(average)
+            };
+
+            fetch(`/students/${studentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(studentData)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        loadData();
+                        $('#updateStudentModal').modal('hide');
+                    } else {
+                        handleErrors("updateStudentErrors", response);
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+
+        }
+
+        function showDeletePopup(id) {
+            document.getElementById("deleteStudentId").value = id;
+            $('#deleteStudentModal').modal('show');
+        }
+
+        function deleteStudent() {
+            const studentId = document.getElementById("deleteStudentId").value;
+            fetch(`/students/${studentId}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        loadData();
+                        $('#deleteStudentModal').modal('hide');
+                    } else {
+                        handleErrors("deleteStudentErrors", response);
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            studentTableBody = document.getElementById("studentTableBody");
+            $(".modal").on("hidden.bs.modal", function () {
+                $("#addStudentErrors, #updateStudentErrors, #deleteStudentErrors").html("");
+            });
+            loadData();
+        });
+
+    </script>
+    <style>
+        .scrollable-table {
+            height: calc(100vh - 150px);
+            overflow: auto;
+        }
+
+        .scrollable-table thead {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            border-bottom: 1px solid #000;
+        }
+
+    </style>
+
+</head>
+<body>
+<div class="container mt-5">
+    <h1>Student Management</h1>
+    <button onclick="showAddPopUp()" class="btn btn-primary" data-toggle="modal" data-target="#addStudentModal">Add
+    </button>
+
+    <!-- Add Student Modal -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1" role="dialog" aria-labelledby="addStudentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStudentModalLabel">Add Student</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" id="addStudentErrors"></div>
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" class="form-control" id="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="surname">Surname:</label>
+                        <input type="text" class="form-control" id="surname">
+                    </div>
+                    <div class="form-group">
+                        <label for="average">Average:</label>
+                        <input type="text" class="form-control" id="average">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-info" onclick="addStudent()">Add Student</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Student Modal -->
+    <div class="modal fade" id="updateStudentModal" tabindex="-1" role="dialog"
+         aria-labelledby="updateStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStudentModalLabel">Update Student</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" id="updateStudentErrors"></div>
+                    <div class="form-group">
+                        <label for="updateName">Name:</label>
+                        <input type="text" class="form-control" id="updateName">
+                    </div>
+                    <div class="form-group">
+                        <label for="updateSurname">Surname:</label>
+                        <input type="text" class="form-control" id="updateSurname">
+                    </div>
+                    <div class="form-group">
+                        <label for="updateAverage">Average:</label>
+                        <input type="text" class="form-control" id="updateAverage">
+                    </div>
+                    <input type="hidden" id="updateStudentId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-info" onclick="updateStudent()">Update Student</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Student Modal -->
+    <div class="modal fade" id="deleteStudentModal" tabindex="-1" role="dialog"
+         aria-labelledby="deleteStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteStudentModalLabel">Update Student</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" id="deleteStudentErrors"></div>
+                    <h4 class="text-center">Czy na pewno chcesz usunąć studenta?</h4>
+                    <p class="text-center">Tej operacji nie można cofnąć</p>
+                    <input type="hidden" id="deleteStudentId">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteStudent()">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="scrollable-table">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Average</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="studentTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Bootstrap JS and jQuery -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<!-- Add your custom JavaScript -->
+</body>
+</html>
