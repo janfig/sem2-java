@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,10 +45,19 @@ public class UserController {
 
     @PostMapping("/register")
     public String registerPagePOST(@Valid User user, BindingResult binding) {
+        if(user.getPassword().length() < 6) {
+            binding.rejectValue("password", "error.password", "Hasło musi mieć conajmniej 6 znaków");
+        } else {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        User existingUser = dao.findByLogin(user.getLogin());
+        if(existingUser != null) {
+            binding.rejectValue("login", "error.login", "Login jest już zajęty");
+        }
         if (binding.hasErrors()) {
             return "register";
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         dao.save(user);
         return "redirect:/login";
     }
@@ -73,18 +83,28 @@ public class UserController {
     }
 
     @PostMapping("/edit")
-    public String editPagePOST(@ModelAttribute User user, Principal p) throws Exception {
+    public String editPagePOST(@Valid User user, BindingResult binding, Principal p) throws Exception {
         String newPassword = user.getPassword();
         if(newPassword.isBlank()) {
             String existingPassword = dao.findByLogin(p.getName()).getPassword();
             user.setPassword(existingPassword);
         } else {
-            user.setPassword(passwordEncoder.encode(newPassword));
+            if(newPassword.length() < 6) {
+                binding.rejectValue("password", "error.password", "Hasło musi mieć conajmniej 6 znaków");
+            } else {
+                user.setPassword(passwordEncoder.encode(newPassword));
+            }
         }
 
+
         User existingUser = dao.findByLogin(user.getLogin());
-        if(existingUser != null && p.getName().equals(existingUser.getName()))
-            throw new Exception("Login " + user.getLogin() + "is taken.");
+        if(existingUser != null && !p.getName().equals(existingUser.getLogin())) {
+            binding.rejectValue("login", "error.login", "Login jest już zajęty");
+        }
+        if (binding.hasErrors()) {
+            return "edit";
+        }
+
         Authentication authentication = new UsernamePasswordAuthenticationToken(user, null);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         dao.save(user);

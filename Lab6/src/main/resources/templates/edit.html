@@ -4,12 +4,36 @@
 <body>
 <div th:include="layout :: navigationPanel"></div>
 <h1>Edycja:</h1>
+<!--<form th:action="@{/edit}" method="POST" th:object="${user}">-->
+<!--    <input type="text" th:field="*{name}" placeholder="Imię"/>-->
+<!--    <input type="text" th:field="*{surname}" placeholder="Nazwisko"/>-->
+<!--    <input type="text" th:field="*{login}" placeholder="Login"/>-->
+<!--    <input type="password" th:field="*{password}" placeholder="Hasło"/>-->
+<!--    <input type="hidden" th:field="*{userId}">-->
+<!--    <button type="submit">Zapisz</button>-->
+<!--</form>-->
 <form th:action="@{/edit}" method="POST" th:object="${user}">
+    <input type="hidden" th:field="*{userId}"/>
     <input type="text" th:field="*{name}" placeholder="Imię"/>
+    <ul>
+        <li th:color="red" th:each="err : ${#fields.errors('name')}" th:text="${err}" class="error"/>
+    </ul>
+    <br>
     <input type="text" th:field="*{surname}" placeholder="Nazwisko"/>
+    <ul>
+        <li th:color="red" th:each="err : ${#fields.errors('surname')}" th:text="${err}" class="error"/>
+    </ul>
+    <br>
     <input type="text" th:field="*{login}" placeholder="Login"/>
+    <ul>
+        <li th:color="red" th:each="err : ${#fields.errors('login')}" th:text="${err}" class="error"/>
+    </ul>
+    <br>
     <input type="password" th:field="*{password}" placeholder="Hasło"/>
-    <input type="hidden" th:field="*{userId}">
+    <ul>
+        <li th:color="red" th:each="err : ${#fields.errors('password')}" th:text="${err}"/>
+    </ul>
+    <br>
     <button type="submit">Zapisz</button>
 </form>
 <div th:include="layout :: footer"></div>
